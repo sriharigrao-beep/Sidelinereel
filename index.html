@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SidelineReel — Trusted Roster Tagging Prototype</title>
+<style>
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#162033;--muted:#6b7486;--line:#e5e9f0;
+  --brand:#3157ff;--brandSoft:#eef1ff;--ok:#eaf8ef;--okText:#176d39;
+  --warn:#fff4dc;--warnText:#8a5900;--danger:#fff0f0;--dangerText:#a62c2c;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+.app{max-width:1180px;margin:0 auto;padding:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:850;font-size:20px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3157ff,#7f8fff);display:grid;place-items:center;color:#fff;font-weight:900}
+.profile{display:flex;align-items:center;gap:10px}.avatar{width:38px;height:38px;border-radius:50%;background:#e9edf6;display:grid;place-items:center;font-weight:800}
+.small{font-size:12px;color:var(--muted)}
+.stepper{display:flex;gap:8px;margin:8px 0 24px}.step{height:6px;background:#dce2eb;border-radius:99px;flex:1}.step.on{background:var(--brand)}
+.screen{display:none}.screen.active{display:block}
+h1{font-size:31px;line-height:1.15;margin:0 0 8px}.sub{margin:0 0 20px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 16px rgba(30,40,70,.04)}
+.card h3{margin-top:0}
+label{font-size:13px;font-weight:800;display:block;margin-bottom:7px}
+input,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.upload{border:1.5px dashed #b9c2d2;border-radius:16px;padding:24px;text-align:center;background:#fafbfe}
+button{border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--brand);color:white}.secondary{background:white;color:var(--text);border:1px solid var(--line)}
+.ghost{background:var(--brandSoft);color:var(--brand)}.danger{background:var(--danger);color:var(--dangerText)}
+.stack{display:flex;gap:10px;flex-wrap:wrap}
+.event{padding:15px;border:1px solid var(--line);border-radius:14px;margin-top:12px}.event b{display:block;margin-bottom:4px}
+.teamcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.team{padding:14px;border:1px solid var(--line);border-radius:14px}
+.player{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.player:first-of-type{border-top:0}
+.playerleft{display:flex;align-items:center;gap:10px}.num{width:38px;height:38px;border-radius:50%;background:var(--brandSoft);color:var(--brand);display:grid;place-items:center;font-weight:900}
+.badge{font-size:12px;padding:6px 8px;border-radius:999px;font-weight:800}.ok{background:var(--ok);color:var(--okText)}.warn{background:var(--warn);color:var(--warnText)}.done-badge{background:#e9edf6;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:var(--muted)}
+.notice{padding:13px 15px;border-radius:14px;background:var(--warn);color:#6d4800;font-size:14px;line-height:1.45}
+.video{height:300px;border-radius:18px;background:linear-gradient(180deg,#142039,#2d4164);position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.field{position:absolute;inset:0;opacity:.55;background:linear-gradient(90deg,transparent 49.4%,rgba(255,255,255,.4) 50%,transparent 50.6%),repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 40px,transparent 40px 80px)}
+.jersey{z-index:2;width:96px;height:114px;margin-bottom:46px;border-radius:20px 20px 28px 28px;background:#fafbff;display:grid;place-items:center;font-size:42px;font-weight:900;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.conf{display:flex;align-items:center;gap:10px;margin-top:12px}.bar{height:8px;background:#edf0f5;border-radius:99px;overflow:hidden;flex:1}.fill{height:100%;background:#dfa33a}
+.choice{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px;border:1px solid var(--line);border-radius:14px;margin-top:10px}
+.success{padding:15px;border-radius:14px;background:var(--ok);color:var(--okText);margin-top:14px}
+.mutedbox{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fbfcfe;color:var(--muted);font-size:14px}
+.hide{display:none}
+.queueItem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line)}.queueItem:first-of-type{border-top:0}
+.conceptCard{border:1.5px dashed #b8a7ea;background:#faf8ff;border-radius:18px;padding:20px;position:relative}
+.conceptTag{position:absolute;top:-11px;left:16px;background:#6c3ff2;color:#fff;font-size:11px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:999px}
+.songRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #e6ddfb;border-radius:12px;background:#fff;margin-top:8px}
+.songRow.selected{border-color:#6c3ff2;background:#f5f1ff}
+.playdot{width:30px;height:30px;border-radius:50%;background:#6c3ff2;color:#fff;display:grid;place-items:center;font-size:12px;flex:none}
+@media(max-width:850px){.grid,.row,.teamcols,.stats{grid-template-columns:1fr}.app{padding:16px}.video{height:250px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><div class="logo">SR</div>SidelineReel</div>
+    <div class="profile"><div><b>Coach Jordan Lee</b><div class="small">Brightwater U14</div></div><div class="avatar">JL</div></div>
+  </div>
+
+  <!-- SCREEN 1 -->
+  <section id="s1" class="screen active">
+    <div class="stepper"><div class="step on"></div><div class="step"></div><div class="step"></div></div>
+    <h1>Create game event & upload footage</h1>
+    <p class="sub">Start from the coach workflow SidelineReel already supports, then let tagging run automatically. (Context only — out of scope for this feature; see spec.)</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>New event</h3>
+        <div class="row">
+          <div><label>Event name</label><input value="Brightwater vs Northside — Week 6"></div>
+          <div><label>Match date</label><input type="date" value="2026-09-12"></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div><label>Team A</label><input value="Brightwater U14"></div>
+          <div><label>Team B</label><input value="Northside U14"></div>
+        </div>
+        <div style="margin-top:16px" class="upload">
+          <b>Upload full-game footage</b>
+          <p class="small">MP4 / MOV • or use connected sideline camera</p>
+          <div class="stack" style="justify-content:center">
+            <button class="secondary" onclick="document.getElementById('file').click()">Choose video</button>
+            <button class="ghost" onclick="fakeUpload()">Use sample game</button>
+          </div>
+          <input id="file" type="file" accept="video/*" style="display:none" onchange="fakeUpload()">
+          <div id="uploadState" class="success hide"><b>Uploaded:</b> brightwater_week6.mp4<br><span class="small">Roster tagging and highlight extraction are ready to run.</span></div>
+        </div>
+        <div class="stack" style="margin-top:16px">
+          <button id="processBtn" class="primary" onclick="processGame()" disabled>Process game footage</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Event roster</h3>
+        <div class="teamcols">
+          <div class="team">
+            <b>Brightwater U14</b>
+            <div class="player"><div class="playerleft"><div class="num">14</div><div><b>Maya Chen</b><div class="small">Forward</div></div></div></div>
+            <div class="player"><div class="playerleft"><div class="num">4</div><div><b>Ava Brooks</b><div class="small">Midfield</div></div></div></div>
+            <div class="player"><div class="playerleft"><div class="num">11</div><div><b>Leo Martin</b><div class="small">Forward</div></div></div></div>
+          </div>
+          <div class="team">
+            <b>Northside U14</b>
+            <div class="player"><div class="playerleft"><div class="num">1</div><div><b>Ethan Cole</b><div class="small">Goalkeeper</div></div></div></div>
+            <div class="player"><div class="playerleft"><div class="num">12</div><div><b>Noah Patel</b><div class="small">Defense</div></div></div></div>
+            <div class="player"><div class="playerleft"><div class="num">21</div><div><b>Owen Reed</b><div class="small">Midfield</div></div></div></div>
+          </div>
+        </div>
+        <div class="mutedbox" style="margin-top:14px">Coach can inspect any player later, but only uncertain tags require action.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: QUEUE -->
+  <section id="s2" class="screen">
+    <div class="stepper"><div class="step on"></div><div class="step on"></div><div class="step"></div></div>
+    <h1 id="s2title">Highlights processed — 3 tags need review</h1>
+    <p class="sub">High-confidence matches are auto-approved. Only uncertain player identity matches are blocked.</p>
+
+    <div class="stats">
+      <div class="stat"><b>42</b><span>highlight clips extracted</span></div>
+      <div class="stat"><b id="autoApprovedCount">39</b><span>auto-approved tags</span></div>
+      <div class="stat"><b id="flaggedRemaining">3</b><span>low-confidence tags remaining</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Review queue</h3>
+        <div id="queueList"></div>
+      </div>
+
+      <div class="card">
+        <h3>What SidelineReel will do</h3>
+        <div class="notice"><b>Scheduled send: 6:00 PM</b><br>Low-confidence clips cannot appear in a player reel or thumbnail until confirmed. If still unresolved at the deadline, only those clips are excluded and the rest of the recap publishes.</div>
+        <div class="mutedbox" style="margin-top:14px">
+          <b>Why not review all 42 clips?</b><br>
+          The coach stays in the loop only where the model is uncertain, preserving the automated value of SidelineReel.
+        </div>
+        <div class="stack" style="margin-top:16px">
+          <button class="secondary" onclick="show(1)">Back to event</button>
+          <button class="ghost" id="simulateBtn" onclick="simulateDeadline()">Simulate deadline (unresolved → excluded)</button>
+        </div>
+        <div id="allClearBox" class="hide">
+          <div class="success"><b>All flagged clips resolved.</b> The recap is ready to send — no clip needed the deadline fallback.</div>
+          <button class="primary" style="margin-top:12px" onclick="show(4)">Continue to send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="conceptCard" style="margin-top:18px">
+      <span class="conceptTag">FUTURE EXPLORATION — NOT IN THIS RELEASE</span>
+      <h3 style="margin-top:6px">AI auto-edit assist</h3>
+      <p class="small" style="margin-top:-6px">Once a player's clips are correctly tagged, an assist could auto-cut that player's reel with a song and transitions — no manual editor required. This is a concept placeholder, not a committed feature: it depends on what the P2 Reel Editor investigation finds. If people abandon the editor because manual editing is too much work (not because they don't want an edited reel), this is the more likely right shape than "more editor controls." It is deliberately kept separate from — and does not touch — the tagging-accuracy work in this spec.</p>
+
+      <div class="row" style="margin-top:14px">
+        <div>
+          <label>Auto-edit which player's reel?</label>
+          <select id="conceptPlayer">
+            <option>Maya Chen — #14 (8 clips)</option>
+            <option>Leo Martin — #11 (7 clips)</option>
+            <option>Ava Brooks — #4 (5 clips)</option>
+            <option>Owen Reed — #21 (6 clips)</option>
+          </select>
+        </div>
+        <div>
+          <label>Song</label>
+          <div id="songList">
+            <div class="songRow selected" onclick="selectSong(this)"><div class="playdot">▶</div><div><b>Upbeat Anthem</b><div class="small">High-energy, 0:32 cut</div></div></div>
+            <div class="songRow" onclick="selectSong(this)"><div class="playdot">▶</div><div><b>Crowd Favorite</b><div class="small">Mid-tempo, 0:32 cut</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack" style="margin-top:14px">
+        <button class="ghost" onclick="runConceptEdit()" id="conceptBtn">Preview auto-edit (concept)</button>
+      </div>
+      <div id="conceptResult" class="hide mutedbox" style="margin-top:12px;border-color:#e6ddfb;background:#fff"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: REVIEW ONE CLIP -->
+  <section id="s3" class="screen">
+    <div class="stepper"><div class="step on"></div><div class="step on"></div><div class="step"></div></div>
+    <h1>Review uncertain player tag</h1>
+    <p class="sub">The coach sees the ambiguity and decides whether to confirm, reassign, or exclude the clip.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="video"><div class="field"></div><div class="jersey" id="reviewJerseyNum">14</div></div>
+        <div class="conf"><b>Model confidence</b><div class="bar"><div class="fill" id="confFill" style="width:58%"></div></div><span id="confPct">58%</span></div>
+        <div class="small">Detected jersey: <b id="detectedNum" style="color:var(--text)">14</b> • Similar visual candidate: <b id="candidateNum" style="color:var(--text)">4</b></div>
+      </div>
+
+      <div class="card" id="reviewCard">
+        <h3>Who is in this clip?</h3>
+
+        <div id="reviewChoices"></div>
+
+        <label style="margin-top:14px">Choose another roster player</label>
+        <select id="manual">
+          <option value="">Select player...</option>
+        </select>
+
+        <div class="stack" style="margin-top:10px">
+          <button class="secondary" onclick="manualAssign()">Assign selected</button>
+          <button class="danger" onclick="resolveCurrent('exclude', null)">Exclude clip</button>
+        </div>
+
+        <div id="done" class="hide">
+          <div class="success"><b id="resultText">Resolved</b></div>
+          <div class="stack" style="margin-top:14px">
+            <button class="primary" onclick="backToQueue()">Back to review queue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: SEND -->
+  <section id="s4" class="screen">
+    <div class="stepper"><div class="step on"></div><div class="step on"></div><div class="step on"></div></div>
+    <h1>Send weekly recap</h1>
+    <p class="sub">Every flagged clip has been resolved (confirmed, reassigned, excluded, or excluded by the deadline fallback). No unresolved clip can appear in a reel or thumbnail.</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Final tally</h3>
+        <div class="stats">
+          <div class="stat"><b id="finalReady">40</b><span>clips ready to ship</span></div>
+          <div class="stat"><b id="finalExcluded">2</b><span>clips excluded (manual or deadline)</span></div>
+          <div class="stat"><b id="finalStatus">On time</b><span>team recap status</span></div>
+        </div>
+        <div id="resolutionLog" class="mutedbox"></div>
+      </div>
+      <div class="card">
+        <div class="notice"><b>Safe publication:</b> verified highlights can now be sent to families. No unresolved clip is used in a personal reel or thumbnail.</div>
+        <div class="stack" style="margin-top:16px">
+          <button class="primary" onclick="alert('Weekly recap published. Personal reels are ready for parents.')">Publish weekly recap</button>
+          <button class="secondary" onclick="location.reload()">Restart demo</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---- Data model: single source of truth for the queue ----
+const AUTO_APPROVED = 39;
+
+const clips = [
+  {
+    id: 'c1',
+    label: 'Maya Chen — #14',
+    team: 'Brightwater U14',
+    detectedNum: '14',
+    candidateNum: '4',
+    confidence: 58,
+    suggested: { name: 'Maya Chen', num: '14' },
+    alternative: { name: 'Ava Brooks', num: '4' },
+    status: 'pending', // pending | confirmed | reassigned | excluded | deadline_excluded
+    resolution: null
+  },
+  {
+    id: 'c2',
+    label: 'Leo Martin — #11',
+    team: 'Brightwater U14',
+    detectedNum: '11',
+    candidateNum: '1',
+    confidence: 63,
+    suggested: { name: 'Leo Martin', num: '11' },
+    alternative: { name: 'Ethan Cole', num: '1' },
+    status: 'pending',
+    resolution: null
+  },
+  {
+    id: 'c3',
+    label: 'Owen Reed — #21',
+    team: 'Northside U14',
+    detectedNum: '21',
+    candidateNum: '12',
+    confidence: 61,
+    suggested: { name: 'Owen Reed', num: '21' },
+    alternative: { name: 'Noah Patel', num: '12' },
+    status: 'pending',
+    resolution: null
+  }
+];
+
+const roster = [
+  { name: 'Maya Chen', num: '14' },
+  { name: 'Ava Brooks', num: '4' },
+  { name: 'Leo Martin', num: '11' },
+  { name: 'Ethan Cole', num: '1' },
+  { name: 'Noah Patel', num: '12' },
+  { name: 'Owen Reed', num: '21' }
+];
+
+let currentClipId = null;
+
+function show(n){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===2) renderQueue();
+  if(n===4) renderSendScreen();
+}
+function fakeUpload(){
+  document.getElementById('uploadState').classList.remove('hide');
+  document.getElementById('processBtn').disabled=false;
+}
+function processGame(){ show(2); }
+
+function pendingClips(){ return clips.filter(c=>c.status==='pending'); }
+function resolvedClips(){ return clips.filter(c=>c.status!=='pending'); }
+function excludedClips(){ return clips.filter(c=>c.status==='excluded'||c.status==='deadline_excluded'); }
+
+function renderQueue(){
+  const remaining = pendingClips().length;
+  document.getElementById('flaggedRemaining').textContent = remaining;
+  document.getElementById('s2title').textContent = remaining>0
+    ? `Highlights processed — ${remaining} tag${remaining===1?'':'s'} need review`
+    : `Highlights processed — all tags resolved`;
+
+  const list = document.getElementById('queueList');
+  list.innerHTML = '';
+  clips.forEach(c=>{
+    const row = document.createElement('div');
+    row.className='queueItem';
+    let rightHtml;
+    if(c.status==='pending'){
+      rightHtml = `<span class="badge warn">${c.confidence}% confidence</span><button class="primary" onclick="openReview('${c.id}')">Review</button>`;
+    } else {
+      const labelMap = {
+        confirmed: 'Confirmed',
+        reassigned: 'Reassigned',
+        excluded: 'Excluded',
+        deadline_excluded: 'Excluded (deadline)'
+      };
+      rightHtml = `<span class="badge done-badge">${labelMap[c.status]}</span>`;
+    }
+    row.innerHTML = `<div class="playerleft"><div class="num">${c.detectedNum}</div><div><b>${c.label}</b><div class="small">${c.team}</div></div></div><div class="stack">${rightHtml}</div>`;
+    list.appendChild(row);
+  });
+
+  const allClearBox = document.getElementById('allClearBox');
+  const simulateBtn = document.getElementById('simulateBtn');
+  if(remaining===0){
+    allClearBox.classList.remove('hide');
+    simulateBtn.disabled = true;
+  } else {
+    allClearBox.classList.add('hide');
+    simulateBtn.disabled = false;
+  }
+}
+
+function openReview(clipId){
+  currentClipId = clipId;
+  const c = clips.find(x=>x.id===clipId);
+  document.getElementById('reviewJerseyNum').textContent = c.detectedNum;
+  document.getElementById('confFill').style.width = c.confidence+'%';
+  document.getElementById('confPct').textContent = c.confidence+'%';
+  document.getElementById('detectedNum').textContent = c.detectedNum;
+  document.getElementById('candidateNum').textContent = c.candidateNum;
+
+  const choices = document.getElementById('reviewChoices');
+  choices.innerHTML = `
+    <div class="choice">
+      <div class="playerleft"><div class="num">${c.suggested.num}</div><div><b>${c.suggested.name}</b><div class="small">Suggested match</div></div></div>
+      <button class="primary" onclick="resolveCurrent('confirm', null)">Confirm</button>
+    </div>
+    <div class="choice">
+      <div class="playerleft"><div class="num">${c.alternative.num}</div><div><b>${c.alternative.name}</b><div class="small">Likely alternative</div></div></div>
+      <button class="secondary" onclick="resolveCurrent('reassign', '${c.alternative.name} #${c.alternative.num}')">Reassign</button>
+    </div>
+  `;
+
+  const manual = document.getElementById('manual');
+  manual.innerHTML = '<option value="">Select player...</option>' +
+    roster
+      .filter(p => p.name!==c.suggested.name && p.name!==c.alternative.name)
+      .map(p=>`<option>${p.name} #${p.num}</option>`).join('');
+
+  document.getElementById('done').classList.add('hide');
+  document.getElementById('reviewCard').style.display='';
+  document.querySelectorAll('#reviewCard select, #reviewCard button').forEach(el=>el.disabled=false);
+
+  show(3);
+}
+
+function manualAssign(){
+  const v=document.getElementById('manual').value;
+  if(!v){alert('Select a player first.'); return;}
+  resolveCurrent('reassign', v);
+}
+
+function resolveCurrent(action, manualLabel){
+  const c = clips.find(x=>x.id===currentClipId);
+  let resultText;
+  if(action==='confirm'){
+    c.status='confirmed';
+    c.resolution = `${c.suggested.name} #${c.suggested.num}`;
+    resultText = `Confirmed ${c.resolution}`;
+  } else if(action==='reassign'){
+    c.status='reassigned';
+    c.resolution = manualLabel;
+    resultText = `Reassigned to ${manualLabel}`;
+  } else if(action==='exclude'){
+    c.status='excluded';
+    c.resolution = 'Excluded — player could not be identified';
+    resultText = 'Excluded — player could not be identified';
+  }
+
+  document.getElementById('resultText').textContent = resultText;
+  document.getElementById('done').classList.remove('hide');
+  document.querySelectorAll('#reviewChoices button, #manual, #manual ~ .stack button').forEach(el=>el.disabled=true);
+}
+
+function backToQueue(){
+  show(2);
+}
+
+function simulateDeadline(){
+  const remaining = pendingClips();
+  if(remaining.length===0){
+    alert('No unresolved clips remain — the deadline fallback has nothing to do.');
+    return;
+  }
+  remaining.forEach(c=>{
+    c.status='deadline_excluded';
+    c.resolution='Excluded automatically — publishing deadline reached';
+  });
+  renderQueue();
+  const box = document.getElementById('allClearBox');
+  box.classList.remove('hide');
+  box.querySelector('b').textContent = `Deadline reached: ${remaining.length} unresolved clip${remaining.length===1?'':'s'} auto-excluded.`;
+}
+
+function selectSong(el){
+  document.querySelectorAll('.songRow').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function runConceptEdit(){
+  const player = document.getElementById('conceptPlayer').value;
+  const song = document.querySelector('.songRow.selected b').textContent;
+  const btn = document.getElementById('conceptBtn');
+  const result = document.getElementById('conceptResult');
+  btn.disabled = true;
+  btn.textContent = 'Generating preview…';
+  result.classList.add('hide');
+  setTimeout(()=>{
+    btn.disabled = false;
+    btn.textContent = 'Preview auto-edit (concept)';
+    result.classList.remove('hide');
+    result.innerHTML = `<b style="color:var(--text)">Concept preview:</b> auto-cut reel for <b>${player}</b> set to "<b>${song}</b>" — illustrative only, no real edit is produced by this prototype. Only clips already confirmed through the review queue above would ever be eligible for auto-edit, once this ships.`;
+  }, 700);
+}
+function renderSendScreen(){
+  const excluded = excludedClips().length;
+  const ready = AUTO_APPROVED + (clips.length - excluded);
+  document.getElementById('finalReady').textContent = ready;
+  document.getElementById('finalExcluded').textContent = excluded;
+  document.getElementById('finalStatus').textContent = 'On time';
+
+  const log = document.getElementById('resolutionLog');
+  log.innerHTML = '<b>Per-clip outcome</b><br>' + clips.map(c=>{
+    const labelMap = {
+      confirmed: 'Confirmed',
+      reassigned: 'Reassigned',
+      excluded: 'Excluded (coach)',
+      deadline_excluded: 'Excluded (deadline fallback)'
+    };
+    return `${c.label}: ${labelMap[c.status]}`;
+  }).join('<br>');
+}
+</script>
+</body>
+</html>
